@@ -1,0 +1,66 @@
+version: "3.7"
+services:
+
+  db: 
+    image: postgres:11-alpine
+    container_name: clarolab-ttriage-db
+    restart: always
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - benet
+    environment:
+      - POSTGRES_USER=ttriage
+      - POSTGRES_PASSWORD=ttriage
+      - POSTGRES_DB=ttriage
+
+  backend:
+    image: ttriage/server
+    container_name: clarolab-ttriage
+    command: java -Xmx256M -Xms128M -Dserver.port=80 -Dspring.profiles.active=prod -jar /app/app.jar
+    restart: always
+    depends_on:
+      - db
+    networks:
+      - benet
+      - fenet 
+    ports:
+      - 8088:80
+    environment:
+      - db.url=jdbc:postgresql://db:5432/ttriage
+      - db.dialect=org.hibernate.dialect.PostgreSQL95Dialect
+      - db.platform=postgres
+      - db.drive=org.postgresql.Driver
+      - db.password=ttriage
+      - db.username=ttriage
+      - db.populate=false
+      - google.client-id=123123
+      - google.client-secret=123123
+      - h2.console=false
+      - app.url=localhost
+      - db.profile=prod
+
+  front:
+    image: ttriage/client
+    container_name: clarolab-ttriage-front
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - 80:80
+    networks:
+      - fenet
+    volumes:
+      - type: bind
+        source: ./config-front.yml
+        target: /usr/app/config.yml
+      
+
+volumes:
+ postgres-data:
+
+networks:
+  benet:
+    driver: bridge
+  fenet:
+    driver: bridge

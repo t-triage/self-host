@@ -1,0 +1,7 @@
+version: 1
+port: 80
+apiurl: http://localhost:8088
+login:
+  google: false
+  onelogin: false
+  internal: true
